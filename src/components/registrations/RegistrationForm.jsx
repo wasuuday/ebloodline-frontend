@@ -123,7 +123,7 @@ async function handleSave() {
         data.append("photo", photo.file);
 
         await axios.post(
-            "http://127.0.0.1:8000/api/registrations",
+            "https://ebloodline-backend.onrender.com/api/registrations",
             data,
             {
                 headers: {
