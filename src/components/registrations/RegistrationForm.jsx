@@ -43,17 +43,93 @@ export default function RegistrationForm() {
 
     const token = localStorage.getItem("token");
 
+    const [loadingAddress, setLoadingAddress] = useState(false);
 
-    function handleChange(e) {
 
-        const { name, value } = e.target;
+function handleChange(e) {
 
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value
-        }));
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+        ...prev,
+        [name]: value
+    }));
+
+    if (name === "zipcode") {
+
+        if (/^\d{6}$/.test(value)) {
+
+            fetchAddress(value);
+
+        } else {
+
+            setFormData(prev => ({
+                ...prev,
+                zipcode: value,
+                city: "",
+                taluka: "",
+                district: "",
+                state: ""
+            }));
+
+        }
 
     }
+
+}
+
+
+async function fetchAddress(pin) {
+
+    if (!/^\d{6}$/.test(pin)) return;
+
+    setLoadingAddress(true);
+
+    try {
+
+        const res = await axios.get(
+            `https://api.postalpincode.in/pincode/${pin}`
+        );
+
+        if (
+            res.data[0].Status !== "Success" ||
+            !res.data[0].PostOffice
+        ) {
+
+            setFormData(prev => ({
+                ...prev,
+                city: "",
+                taluka: "",
+                district: "",
+                state: ""
+            }));
+
+            return;
+        }
+
+        const office = res.data[0].PostOffice[0];
+
+        setFormData(prev => ({
+            ...prev,
+            city: office.Name || "",
+            taluka: office.Block || "",
+            district: office.District || "",
+            state: office.State || ""
+        }));
+
+    } catch (err) {
+
+        console.error("PIN lookup failed", err);
+
+    } finally {
+
+        setLoadingAddress(false);
+
+    }
+
+}
+
+
 
     function validateForm() {
 
@@ -210,13 +286,11 @@ async function handleSave() {
 
                     />
 
-                    <AddressSection
-
-                        formData={formData}
-
-                        handleChange={handleChange}
-
-                    />
+<AddressSection
+    formData={formData}
+    handleChange={handleChange}
+    loadingAddress={loadingAddress}
+/>
 
                 </div>
 
