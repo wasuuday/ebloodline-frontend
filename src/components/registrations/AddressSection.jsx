@@ -1,4 +1,8 @@
-export default function AddressSection({ formData, handleChange }) {
+export default function AddressSection({
+    formData,
+    handleChange,
+    loadingAddress
+}) {
     return (
         <div className="bg-white rounded-xl shadow-sm border p-6">
 
