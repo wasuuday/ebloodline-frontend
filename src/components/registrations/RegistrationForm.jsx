@@ -1,5 +1,5 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import api from "../../services/api";
 
 import PersonalInfo from "./PersonalInfo";
 import ContactInfo from "./ContactInfo";
@@ -29,9 +29,47 @@ const initialForm = {
     state: ""
 };
 
-export default function RegistrationForm() {
+
+
+export default function RegistrationForm({
+
+    donor = null,
+
+    editMode = false,
+
+    onBack = null
+
+}) {
 
     const [formData, setFormData] = useState(initialForm);
+
+useEffect(() => {
+
+    if (!donor) return;
+
+    setFormData({
+
+        first_name: donor.first_name || "",
+        last_name: donor.last_name || "",
+        dob: donor.dob || "",
+        blood_group: donor.blood_group || "",
+        occupation: donor.occupation || "",
+
+        email: donor.email || "",
+        phone: donor.phone || "",
+
+        address_line1: donor.address_line1 || "",
+        address_line2: donor.address_line2 || "",
+
+        zipcode: donor.zipcode || "",
+        city: donor.city || "",
+        taluka: donor.taluka || "",
+        district: donor.district || "",
+        state: donor.state || ""
+
+    });
+
+}, [donor]);
 
     const [photo, setPhoto] = useState(null);
 
@@ -44,40 +82,6 @@ export default function RegistrationForm() {
     const token = localStorage.getItem("token");
 
     const [loadingAddress, setLoadingAddress] = useState(false);
-
-
-function handleChange(e) {
-
-    const { name, value } = e.target;
-
-    setFormData(prev => ({
-        ...prev,
-        [name]: value
-    }));
-
-    if (name === "zipcode") {
-
-        if (/^\d{6}$/.test(value)) {
-
-            fetchAddress(value);
-
-        } else {
-
-            setFormData(prev => ({
-                ...prev,
-                zipcode: value,
-                city: "",
-                taluka: "",
-                district: "",
-                state: ""
-            }));
-
-        }
-
-    }
-
-}
-
 
 async function fetchAddress(pin) {
 
@@ -126,11 +130,28 @@ async function fetchAddress(pin) {
         setLoadingAddress(false);
 
     }
-
 }
 
+function handleChange(e) {
 
+    const { name, value } = e.target;
 
+    setFormData(prev => ({
+        ...prev,
+        [name]: value
+    }));
+
+    if (name === "zipcode") {
+
+        if (/^\d{6}$/.test(value)) {
+
+            fetchAddress(value);
+
+        }
+
+    }
+
+}
     function validateForm() {
 
         if (!formData.first_name.trim())
@@ -154,8 +175,8 @@ async function fetchAddress(pin) {
         if (!formData.zipcode.trim())
             return "PIN Code is required.";
 
-        if (!photo)
-            return "Please capture donor photograph.";
+if (!editMode && !photo)
+    return "Please capture donor photograph.";
 
         return null;
 
@@ -196,23 +217,66 @@ async function handleSave() {
             data.append(key, formData[key]);
         });
 
-        data.append("photo", photo.file);
+if (photo?.file) {
+    data.append("photo", photo.file);
+}
 
-        await axios.post(
-            "https://ebloodline-backend.onrender.com/api/registrations",
-            data,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "multipart/form-data"
-                }
+if (editMode) {
+
+    await api.put(
+
+        `/registrations/${donor.id}`,
+
+        data,
+
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data"
             }
-        );
+        }
 
-        setMessage("Registration Saved Successfully.");
-        setShowPreview(false);
-        setFormData(initialForm);
-        setPhoto(null);
+    );
+
+} else {
+
+    await api.post(
+
+        "/registrations",
+
+        data,
+
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data"
+            }
+        }
+
+    );
+
+}
+
+if (editMode) {
+    alert("Donor updated successfully.");
+
+    setShowPreview(false);
+
+    if (onBack) {
+        onBack();
+    }
+
+    return;
+}
+
+setMessage("Registration Saved Successfully.");
+setShowPreview(false);
+setFormData(initialForm);
+setPhoto(null);
+
+setTimeout(() => {
+    setMessage("");
+}, 3000);
 
         setTimeout(() => {
             setMessage("");
@@ -238,11 +302,11 @@ async function handleSave() {
 
                 <div>
 
-                    <h1 className="text-3xl font-bold">
+<h1 className="text-3xl font-bold">
 
-                        New Donor Registration
+    {editMode ? "Edit Donor" : "New Donor Registration"}
 
-                    </h1>
+</h1>
 
                     <p className="text-gray-500 mt-1">
 
@@ -341,11 +405,11 @@ async function handleSave() {
                     <Save size={18} />
 
                     {
-                        saving
-
-                            ? "Saving..."
-
-                            : "Quick Save"
+saving
+    ? "Saving..."
+    : editMode
+        ? "Update Donor"
+        : "Quick Save"
 
                     }
 
