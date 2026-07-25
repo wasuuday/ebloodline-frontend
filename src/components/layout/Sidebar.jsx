@@ -4,7 +4,8 @@ import {
     Users,
     BarChart3,
     FileSpreadsheet,
-    LogOut
+    LogOut,
+    Heart
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
@@ -51,6 +52,11 @@ export default function Sidebar() {
                 name: "Export",
                 icon: FileSpreadsheet,
                 path: "/dashboard/export"
+            },
+            {
+                name: "Donor Records",
+                icon: Heart, // or another Lucide icon
+                path: "/dashboard/donorrecords"
             }
 
         );
