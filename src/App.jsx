@@ -8,6 +8,8 @@ import DonorRecords from "./pages/DonorRecords";
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import ExportData from "./pages/ExportData";
+
 
 function App() {
     return (
@@ -40,6 +42,10 @@ function App() {
             <Route
     path="/dashboard/donorrecords"
     element={<DonorRecords />}
+/>
+            <Route
+    path="export"
+    element={<ExportData />}
 />
 
         </Route>
